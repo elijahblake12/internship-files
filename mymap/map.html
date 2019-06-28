@@ -42,20 +42,22 @@ integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqD
     accessToken: 'pk.eyJ1IjoiZWxpamFoYmxha2UxMiIsImEiOiJjanhjbGtrejAwNG5vM3Vwa2o2bWJ6emJlIn0.Rilbj3JdmmYvWqenu3eFLQ'
   }).addTo(map);
   //data for zip codes
-  var zips = [{zip_code: 83854}, {zip_code: 59715}, {zip_code: 94303}, {zip_code: 99501}, {zip_code: 00901}];
+  var zips = [{zip_code: 83854, count: 3}, {zip_code: 59715, count: 5}, {zip_code: 94303, count: 2}, {zip_code: 99501, count: 1}, {zip_code: 00901, count: 4}, {zip_code: 96795, count: 9}];
   
   //fucntion for plotting points
-  function plotPoint(zip_code){
+  function plotPoint(zip_code, countOfPoints){
+    //var countOfPoints = 2;
     L.esri.Geocoding.geocode().postal(zip_code).run(function(err, results, response){
-      var marker = L.marker([results.results[0].latlng.lat, results.results[0].latlng.lng]).addTo(map);
+      var marker = L.marker([results.results[0].latlng.lat, results.results[0].latlng.lng]).bindTooltip(countOfPoints.toString(), {permanent: true, direction: 'left'}).addTo(map);
     });
   }
 
   //loops through zip code data and plots points
+  
   for(var i = 0; i<zips.length; i++){
-    plotPoint(zips[i].zip_code);
+    plotPoint(zips[i].zip_code, zips[i].count);
   }
-
+  
 </script>
     
 </body>
