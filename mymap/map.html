@@ -1,64 +1,61 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<!--css and js from leaflet for map-->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
-integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-  crossorigin=""/>
+  <!--css and js from leaflet for map--> 
 
-<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js">
-integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
-  crossorigin=""></script>
+  <link rel="stylesheet" href="leaflet/leaflet.css" />
+  <script src="leaflet/leaflet.js"></script> 
 
-<link rel="stylesheet" href="leaflet/leaflet.css"/>
-<script src="leaflet/leaflet.js"></script>
-
-<!--css and js from ersi for geocoding-->
-<script src="https://unpkg.com/esri-leaflet"></script>
+  <!--css and js from ersi for geocoding-->
+  <script src="https://unpkg.com/esri-leaflet"></script>
 
 
-<link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css">
-<script src="https://unpkg.com/esri-leaflet-geocoder"></script>
+  <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css">
+  <script src="https://unpkg.com/esri-leaflet-geocoder"></script>
 
-<meta charset="utf-8">
-<title>Map</title>
+  <meta charset="utf-8">
+  <title>Map</title>
 
-<style>
-  #mapid { height: 700px; }
-</style>
+  <style>
+    #mapid {
+      height: 700px;
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="mapid"></div>
+  <div id="mapid"></div>
 
-<script>
-  //creates map
+  <script>
+    //creates map
   var map = L.map('mapid').setView([50, -100], 3);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoiZWxpamFoYmxha2UxMiIsImEiOiJjanhjbGtrejAwNG5vM3Vwa2o2bWJ6emJlIn0.Rilbj3JdmmYvWqenu3eFLQ'
-  }).addTo(map);
-  //data for zip codes
-  var zips = [{zip_code: 83854, count: 3}, {zip_code: 59715, count: 5}, {zip_code: 94303, count: 2}, {zip_code: 99501, count: 1}, {zip_code: 00901, count: 4}, {zip_code: 96795, count: 9}];
-  
-  //fucntion for plotting points
-  function plotPoint(zip_code, countOfPoints){
-    //var countOfPoints = 2;
-    L.esri.Geocoding.geocode().postal(zip_code).run(function(err, results, response){
-      var marker = L.marker([results.results[0].latlng.lat, results.results[0].latlng.lng]).bindTooltip(countOfPoints.toString(), {permanent: true, direction: 'left'}).addTo(map);
-    });
-  }
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox.streets',
+      accessToken: 'pk.eyJ1IjoiZWxpamFoYmxha2UxMiIsImEiOiJjanhjbGtrejAwNG5vM3Vwa2o2bWJ6emJlIn0.Rilbj3JdmmYvWqenu3eFLQ'
+    }).addTo(map);
+    //data for zip codes
+    var zips = [{ zip_code: 83854, count: 3 }, { zip_code: 59715, count: 5 }, { zip_code: 94303, count: 2 }, { zip_code: 99501, count: 1 }, { zip_code: 00901, count: 4 }, { zip_code: 96795, count: 9 }];
 
-  //loops through zip code data and plots points
-  
-  for(var i = 0; i<zips.length; i++){
-    plotPoint(zips[i].zip_code, zips[i].count);
-  }
-  
-</script>
-    
+    //function for plotting points
+    function plotPoint(zip_code, countOfPoints) {
+      L.esri.Geocoding.geocode().postal(zip_code).run(function (err, results, response) {
+        var marker = L.marker([results.results[0].latlng.lat, results.results[0].latlng.lng]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' }).addTo(map);
+      });
+    }
+
+    //loops through zip code data and plots points
+
+    for (var i = 0; i < zips.length; i++) {
+      plotPoint(zips[i].zip_code, zips[i].count);
+    }
+
+  </script>
+
 </body>
+
 </html>
