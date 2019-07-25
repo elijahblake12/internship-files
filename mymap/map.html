@@ -2,10 +2,10 @@
 <html>
 
 <head>
-  <!--css and js from leaflet for map--> 
+  <!--css and js from leaflet for map-->
 
   <link rel="stylesheet" href="leaflet/leaflet.css" />
-  <script src="leaflet/leaflet.js"></script> 
+  <script src="leaflet/leaflet.js"></script>
 
   <!--css and js from ersi for geocoding-->
   <script src="https://unpkg.com/esri-leaflet"></script>
@@ -19,18 +19,23 @@
 
   <style>
     #mapid {
-      height: 700px;
+      height: 600px;
     }
   </style>
 </head>
 
 <body>
 
+  <div class="sliderdiv">
+    <input type="range" min="0" max="1439" value="0" id="timeSlider">    <!--each number for every minute of the day -->
+    <p>Time of the Day: <span id="timeOfDay"></span></p>
+  </div>
+
   <div id="mapid"></div>
 
   <script>
     //creates map
-  var map = L.map('mapid').setView([50, -100], 3);
+    var map = L.map('mapid').setView([50, -100], 3);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -38,23 +43,102 @@
       id: 'mapbox.streets',
       accessToken: 'pk.eyJ1IjoiZWxpamFoYmxha2UxMiIsImEiOiJjanhjbGtrejAwNG5vM3Vwa2o2bWJ6emJlIn0.Rilbj3JdmmYvWqenu3eFLQ'
     }).addTo(map);
+
     //data for zip codes
-    var zips = [{ zip_code: 83854, count: 3 }, { zip_code: 59715, count: 5 }, { zip_code: 94303, count: 2 }, { zip_code: 99501, count: 1 }, { zip_code: 00901, count: 4 }, { zip_code: 96795, count: 9 }];
+    var zips = [{ zip_code: "83854", count: 3, time: "01:55:25" }, { zip_code: "59715", count: 5, time: "04:05:25" }, { zip_code: "94303", count: 2, time: "07:05:25" }, { zip_code: "99501", count: 1, time: "13:05:25" }, { zip_code: "00901", count: 4, time: "17:05:25" }, { zip_code: "96795", count: 9, time: "22:05:25" }];
 
     //function for plotting points
     function plotPoint(zip_code, countOfPoints) {
-      L.esri.Geocoding.geocode().postal(zip_code).run(function (err, results, response) {
-        var marker = L.marker([results.results[0].latlng.lat, results.results[0].latlng.lng]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' }).addTo(map);
+      L.esri.Geocoding.geocode().postal(zip_code).run(function (error, results) {
+        var latitude = results.results[0].latlng.lat;   //defines latitude from json produced from geocoding
+        var longitude = results.results[0].latlng.lng;  ////defines longitude from json produced from geocoding
+        var pointWithCountOfPointsTag = L.marker([latitude, longitude]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' });  //defines point to be plotted
+        pointWithCountOfPointsTag.addTo(map); //plots point on map
       });
     }
 
-    //loops through zip code data and plots points
-
-    for (var i = 0; i < zips.length; i++) {
-      plotPoint(zips[i].zip_code, zips[i].count);
+    function formatTime(hou, min, ampm) {   //formats time to be compared to data, ampm only used if not military time
+      if (min <= 9) {
+        min = "0" + min;  //creates consistency in times
+      }
+      if (hou <= 9) {
+        hou = "0" + hou;  //same consistency
+      }
+      return (hou + ":" + min + ampm).toString();
     }
 
+    var slider = document.getElementById("timeSlider");   //creates variable from slider to be used in javascript
+    var output = document.getElementById("timeOfDay");    //
+
+    if(slider.value == 0){
+    output.innerHTML = "12:00am";   //default value
+    }
+
+    slider.oninput = function () {  //runs each time the slider hits a new number
+      //converts slider values of 0-1439(for each minute of the day) to military time, used to compare to time in data
+
+      var milTimeHour;
+      var milTimeMinute;
+
+      for (var i = 0; i < 24; i++) {  //creates time for each hour of the day
+        if (this.value / 60 < (i + 1) && this.value / 60 >= i) {  //uses slider value to calculate values for hour and minute
+          milTimeHour = i;
+          milTimeMinute = Math.abs(i * 60 - this.value);
+        }
+      }
+
+      var milTimeFormatted = formatTime(milTimeHour, milTimeMinute, "");    //allows military time to be compared to data
+
+      for (var i = 0; i < zips.length; i++) {
+        if (milTimeFormatted >= zips[i].time) {   //checks if the slider is at least at the time for a point to be plotted
+          plotPoint(zips[i].zip_code, zips[i].count);
+        }
+      }
+
+      //converts slider values to am/pm time to read on the screen
+
+      var hour;
+      var minute;
+      var ampm;   //to distinguish first and second half of the day
+
+      if (this.value < 720) {   //first half of the day
+        ampm = "am";
+        if (this.value / 60 < 1) {
+          hour = 12;
+          minute = Math.abs(this.value);
+        }
+
+        for (var i = 1; i < 12; i++) {
+          if (this.value / 60 < (i + 1) && this.value / 60 >= i) {
+            hour = i;
+            minute = Math.abs(i * 60 - this.value);
+          }
+        }
+
+      }
+
+      if (this.value >= 720) {    //second half of the day
+        ampm = "pm";
+        if ((this.value - 720) / 60 < 1) {    // - 720 is for offset of slider number
+          hour = 12;
+          minute = Math.abs(720 - this.value);
+        }
+
+        for (var i = 1; i < 12; i++) {
+          if ((this.value - 720) / 60 < (i + 1) && (this.value - 720) / 60 >= i) {
+            hour = i;
+            minute = Math.abs(i * 60 - (this.value - 720));
+          }
+        }
+      }
+
+      var now = formatTime(hour, minute, ampm);   //time to be outputted on the screen
+      output.innerHTML = now;
+
+    }
   </script>
+
+
 
 </body>
 
