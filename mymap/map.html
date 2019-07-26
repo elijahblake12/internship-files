@@ -27,7 +27,8 @@
 <body>
 
   <div class="sliderdiv">
-    <input type="range" min="0" max="1439" value="0" id="timeSlider">    <!--each number for every minute of the day -->
+    <input type="range" min="0" max="1439" value="0" id="timeSlider">
+    <!--each number for every minute of the day -->
     <p>Time of the Day: <span id="timeOfDay"></span></p>
   </div>
 
@@ -45,16 +46,28 @@
     }).addTo(map);
 
     //data for zip codes
-    var zips = [{ zip_code: "83854", count: 3, time: "01:55:25" }, { zip_code: "59715", count: 5, time: "04:05:25" }, { zip_code: "94303", count: 2, time: "07:05:25" }, { zip_code: "99501", count: 1, time: "13:05:25" }, { zip_code: "00901", count: 4, time: "17:05:25" }, { zip_code: "96795", count: 9, time: "22:05:25" }];
+    var zips = [{ zip_code: "83854", count: 3, time: "00:20:25" }, { zip_code: "59715", count: 5, time: "04:35:25" }, { zip_code: "94303", count: 2, time: "07:05:25" }, { zip_code: "99501", count: 1, time: "13:05:25" }, { zip_code: "00901", count: 4, time: "17:05:25" }, { zip_code: "96795", count: 9, time: "22:05:25" }];
+    var alreadyPlotted = [];
+
+    function ifContains(array, index) {    //used for checking if a point is in the list of plotted points
+      for (var i = 0; i < array.length; i++) {
+        if (array[i] == index) {
+          return true;
+        }
+      }
+      return false;
+    }
 
     //function for plotting points
     function plotPoint(zip_code, countOfPoints) {
+
       L.esri.Geocoding.geocode().postal(zip_code).run(function (error, results) {
         var latitude = results.results[0].latlng.lat;   //defines latitude from json produced from geocoding
         var longitude = results.results[0].latlng.lng;  ////defines longitude from json produced from geocoding
         var pointWithCountOfPointsTag = L.marker([latitude, longitude]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' });  //defines point to be plotted
         pointWithCountOfPointsTag.addTo(map); //plots point on map
       });
+
     }
 
     function formatTime(hou, min, ampm) {   //formats time to be compared to data, ampm only used if not military time
@@ -70,13 +83,13 @@
     var slider = document.getElementById("timeSlider");   //creates variable from slider to be used in javascript
     var output = document.getElementById("timeOfDay");    //
 
-    if(slider.value == 0){
-    output.innerHTML = "12:00am";   //default value
+    if (slider.value == 0) {
+      output.innerHTML = "12:00am";   //default value
     }
 
     slider.oninput = function () {  //runs each time the slider hits a new number
       //converts slider values of 0-1439(for each minute of the day) to military time, used to compare to time in data
-
+      //debugger;
       var milTimeHour;
       var milTimeMinute;
 
@@ -91,7 +104,11 @@
 
       for (var i = 0; i < zips.length; i++) {
         if (milTimeFormatted >= zips[i].time) {   //checks if the slider is at least at the time for a point to be plotted
-          plotPoint(zips[i].zip_code, zips[i].count);
+          if (!ifContains(alreadyPlotted, zips[i].zip_code)) {    //checks if point has been plotted already to avoid overplotting
+            plotPoint(zips[i].zip_code, zips[i].count);
+            alreadyPlotted.push(zips[i].zip_code);
+          }
+
         }
       }
 
