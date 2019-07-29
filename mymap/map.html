@@ -70,7 +70,7 @@
           var pointWithCountOfPointsTag = L.marker([latitude, longitude]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' });  //defines point to be plotted
           pointWithCountOfPointsTag.addTo(map); //plots point on map
         }
-        catch (err) {
+        catch (error) {
           console.log("Error plotting point");
         }
       });
