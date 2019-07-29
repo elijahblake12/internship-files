@@ -46,8 +46,12 @@
     }).addTo(map);
 
     //data for zip codes
-    var zips = [{ zip_code: "83854", count: 3, time: "00:20:25" }, { zip_code: "59715", count: 5, time: "04:35:25" }, { zip_code: "94303", count: 2, time: "07:05:25" }, { zip_code: "99501", count: 1, time: "13:05:25" }, { zip_code: "00901", count: 4, time: "17:05:25" }, { zip_code: "96795", count: 9, time: "22:05:25" }];
-    var alreadyPlotted = [];
+    function getData(){   //function to return data
+      var zips = [{ zip_code: "83854", count: 3, time: "00:20:25" }, { zip_code: "59715", count: 5, time: "04:35:25" }, { zip_code: "94303", count: 2, time: "07:05:25" }, { zip_code: "99501", count: 1, time: "13:05:25" }, { zip_code: "00901", count: 4, time: "17:05:25" }, { zip_code: "96795", count: 9, time: "22:05:25" }];
+      return zips;
+    }
+
+    var alreadyPlotted = [];    //keeps track of what has been plotted to avoid overplotting
 
     function ifContains(array, index) {    //used for checking if a point is in the list of plotted points
       for (var i = 0; i < array.length; i++) {
@@ -62,26 +66,30 @@
     function plotPoint(zip_code, countOfPoints) {
 
       L.esri.Geocoding.geocode().postal(zip_code).run(function (error, results) {
-        var latitude = results.results[0].latlng.lat;   //defines latitude from json produced from geocoding
-        var longitude = results.results[0].latlng.lng;  ////defines longitude from json produced from geocoding
-        var pointWithCountOfPointsTag = L.marker([latitude, longitude]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' });  //defines point to be plotted
-        pointWithCountOfPointsTag.addTo(map); //plots point on map
+         try {
+            var latitude = results.results[0].latlng.lat;   //defines latitude from json produced from geocoding
+            var longitude = results.results[0].latlng.lng;  ////defines longitude from json produced from geocoding
+            var pointWithCountOfPointsTag = L.marker([latitude, longitude]).bindTooltip(countOfPoints.toString(), { permanent: true, direction: 'left' });  //defines point to be plotted
+            pointWithCountOfPointsTag.addTo(map); //plots point on map
+          }
+          catch(err) {
+            console.log("Error plotting point");
+          }
       });
-
     }
 
-    function formatTime(hou, min, ampm) {   //formats time to be compared to data, ampm only used if not military time
+    function formatTime(hour, min, ampm) {   //formats time to be compared to data, ampm only used if not military time
       if (min <= 9) {
         min = "0" + min;  //creates consistency in times
       }
-      if (hou <= 9) {
-        hou = "0" + hou;  //same consistency
+      if (hour <= 9) {
+        hour = "0" + hour;  //same consistency
       }
-      return (hou + ":" + min + ampm).toString();
+      return (hour + ":" + min + ampm).toString();
     }
 
     var slider = document.getElementById("timeSlider");   //creates variable from slider to be used in javascript
-    var output = document.getElementById("timeOfDay");    //
+    var output = document.getElementById("timeOfDay");    //output to be on screen to see
 
     if (slider.value == 0) {
       output.innerHTML = "12:00am";   //default value
@@ -89,7 +97,7 @@
 
     slider.oninput = function () {  //runs each time the slider hits a new number
       //converts slider values of 0-1439(for each minute of the day) to military time, used to compare to time in data
-      //debugger;
+      
       var milTimeHour;
       var milTimeMinute;
 
@@ -102,11 +110,11 @@
 
       var milTimeFormatted = formatTime(milTimeHour, milTimeMinute, "");    //allows military time to be compared to data
 
-      for (var i = 0; i < zips.length; i++) {
-        if (milTimeFormatted >= zips[i].time) {   //checks if the slider is at least at the time for a point to be plotted
-          if (!ifContains(alreadyPlotted, zips[i].zip_code)) {    //checks if point has been plotted already to avoid overplotting
-            plotPoint(zips[i].zip_code, zips[i].count);
-            alreadyPlotted.push(zips[i].zip_code);
+      for (var i = 0; i < getData().length; i++) {
+        if (milTimeFormatted >= getData()[i].time) {   //checks if the slider is at least at the time for a point to be plotted
+          if (!ifContains(alreadyPlotted, getData()[i].zip_code)) {    //checks if point has been plotted already to avoid overplotting
+            plotPoint(getData()[i].zip_code, getData()[i].count);
+            alreadyPlotted.push(getData()[i].zip_code);
           }
 
         }
